@@ -32,11 +32,20 @@ class LeaveRequestController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $validated = $request->validate([
-            'status' => 'required|in:approved,rejected',
+            'status'           => 'required|in:approved,rejected',
+            'rejection_reason' => 'nullable|string|required_if:status,rejected',
         ]);
 
         $leave = LeaveRequest::findOrFail($id);
-        $leave->update(['status' => $validated['status']]);
+        $leave->status = $validated['status'];
+
+        if ($validated['status'] === 'rejected') {
+            $leave->rejection_reason = $validated['rejection_reason'];
+        } else {
+            $leave->rejection_reason = null;
+        }
+
+        $leave->save();
 
         return response()->json($leave);
     }
